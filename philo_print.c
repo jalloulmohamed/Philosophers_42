@@ -1,18 +1,20 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_isdigit.c                                       :+:      :+:    :+:   */
+/*   philo_print.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mjalloul <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/05/20 19:28:42 by mjalloul          #+#    #+#             */
-/*   Updated: 2022/05/20 19:29:15 by mjalloul         ###   ########.fr       */
+/*   Created: 2022/05/20 19:29:47 by mjalloul          #+#    #+#             */
+/*   Updated: 2022/05/20 19:31:20 by mjalloul         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
+#include "philo.h"
 
-int	ft_isdigit(int c)
+void	philo_print(char *str, long time, int id, t_philo *philos)
 {
-	if (c >= 48 && c <= 57)
-		return (1);
-	return (0);
+	pthread_mutex_lock(&philos->tab->print);
+	printf("[%ld] philo %d  %s\n", time - philos->tab->starttime, id, str);
+	pthread_mutex_unlock(&philos->tab->print);
+	return ;
 }

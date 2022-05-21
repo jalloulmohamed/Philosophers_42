@@ -1,18 +1,31 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_isdigit.c                                       :+:      :+:    :+:   */
+/*   ft_uslep.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mjalloul <marvin@42.fr>                    +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2022/05/20 19:28:42 by mjalloul          #+#    #+#             */
-/*   Updated: 2022/05/20 19:29:15 by mjalloul         ###   ########.fr       */
+/*   Created: 2022/05/20 22:46:10 by mjalloul          #+#    #+#             */
+/*   Updated: 2022/05/20 22:47:58 by mjalloul         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-int	ft_isdigit(int c)
+#include "philo.h"
+
+long	long	apah(long long pers, long long past)
 {
-	if (c >= 48 && c <= 57)
-		return (1);
-	return (0);
+	return (pers - past);
+}
+
+void	ft_uslep(int time)
+{
+	long long	start_resting;
+
+	start_resting = get_time();
+	while (1)
+	{
+		if (apah(get_time(), start_resting) >= time)
+			break ;
+		usleep(500);
+	}
 }
