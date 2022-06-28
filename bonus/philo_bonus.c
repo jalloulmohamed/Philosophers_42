@@ -1,45 +1,37 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   philo.c                                            :+:      :+:    :+:   */
+/*   philo_bonus.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: mjalloul <mjalloul@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/05/20 19:10:03 by mjalloul          #+#    #+#             */
-/*   Updated: 2022/06/28 16:47:50 by mjalloul         ###   ########.fr       */
+/*   Updated: 2022/06/27 23:20:06 by mjalloul         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philo.h"
+#include "philo_bonus.h"
 
 void	routine(t_philo *philos)
 {
-	pthread_mutex_lock(&philos -> tab -> tabfork[philos -> id - 1]);
+	sem_wait(philos->tab->fork);
 	philo_print("has taken a fork", get_time(), philos->id, philos);
-	if (philos->id == philos->tab->nophilo)
-		pthread_mutex_lock(&philos->tab->tabfork[0]);
-	else
-		pthread_mutex_lock(&philos->tab->tabfork[philos->id]);
+	sem_wait(philos->tab->fork);
 	philo_print("has taken a fork", get_time(), philos->id, philos);
 	philo_print("is eating", get_time(), philos->id, philos);
 	ft_uslep(philos->tab->toeat);
-	philos->tab->start[philos->id - 1] = get_time();
-	pthread_mutex_unlock(&philos->tab->tabfork[philos->id - 1]);
-	if (philos->id == philos->tab->nophilo)
-		pthread_mutex_unlock(&philos->tab->tabfork[0]);
-	else
-		pthread_mutex_unlock(&philos->tab->tabfork[philos->id]);
+	philos->last_meal = get_time();
+	sem_post(philos->tab->fork);
+	sem_post(philos->tab->fork);
 	philo_print("is sleeping", get_time(), philos->id, philos);
 	ft_uslep(philos->tab->tosleep);
 	philo_print("is thinking", get_time(), philos->id, philos);
 }
 
-void	*philosopher(void *var)
+void	philosopher(t_philo *philos)
 {
 	int			i;
-	t_philo		*philos;
 
-	philos = (t_philo *)var;
 	i = 0;
 	if (philos->tab->numofarg == 5)
 	{
@@ -53,10 +45,23 @@ void	*philosopher(void *var)
 			routine(philos);
 			i++;
 		}
-		if (i == philos->tab->notep_mush_eat)
-			philos->tab->status = 1;
+		exit(1);
 	}
-	return (0);
+}
+
+void	init_tab(t_tabphilo *tab, char**argv, int argc)
+{
+	tab->nophilo = ft_atoi(argv[1]);
+	tab->todie = ft_atoi(argv[2]);
+	tab->toeat = ft_atoi(argv[3]);
+	tab->tosleep = ft_atoi(argv[4]);
+	if (argc == 6)
+		tab->notep_mush_eat = ft_atoi(argv[5]);
+	tab->numofarg = argc;
+	sem_unlink("fork");
+	tab->fork = sem_open("fork", O_CREAT, 0, ft_atoi(argv[1]));
+	sem_unlink("print");
+	tab->print = sem_open("print", O_CREAT, 0, 1);
 }
 
 int	checkarg(char **argv)
@@ -87,42 +92,21 @@ int	checkarg(char **argv)
 	return (0);
 }
 
-void	init_tab(t_tabphilo *tab, char**argv, int argc)
-{
-	tab->nophilo = ft_atoi(argv[1]);
-	tab->todie = ft_atoi(argv[2]);
-	tab->toeat = ft_atoi(argv[3]);
-	tab->tosleep = ft_atoi(argv[4]);
-	if (argc == 6)
-		tab->notep_mush_eat = ft_atoi(argv[5]);
-	tab->status = 0;
-	tab->numofarg = argc;
-	tab->starttime = get_time();
-}
-
 int	main(int argc, char **argv)
 {
 	t_philo		*philo;
-	pthread_t	*th_id;
 	t_tabphilo	tab;
-	int			i;
+	pid_t		*pid;
 
-	i = 0;
 	if (argc == 6 || argc == 5)
 	{
 		if (checkarg(argv) == 1)
 			return (1);
 		init_tab(&tab, argv, argc);
-		th_id = malloc(tab.nophilo * sizeof(pthread_t));
 		philo = malloc(tab.nophilo * sizeof(t_philo));
-		tab.tabfork = malloc(tab.nophilo * sizeof(pthread_mutex_t));
-		tab.start = malloc(tab.nophilo * sizeof(long));
-		if (init_mutex(philo, &tab) == 1)
-			return (1);
-		if (cree_treed(th_id, &tab, philo) == 1)
-			return (1);
-		check_philo_dead(philo, &tab);
-		destroy_mutex(philo, th_id);
+		pid = malloc(tab.nophilo * sizeof(int));
+		creation_process(philo, tab, pid);
+		kill_process(pid, tab);
 	}
 	else
 		return (1);
